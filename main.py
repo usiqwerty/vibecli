@@ -6,11 +6,11 @@ from agents.model_settings import ModelSettings
 from openai import AsyncOpenAI
 
 from config import API_KEY, BASE_URL, MODEL_NAME
-
+from vibe_mcp import mcp_server
 
 # run fastmcp run vibe_mcp.py:mcp_server --transport sse
 # before running this, run the mcp-server-openai.py file
-# mcp_server.run(transport='sse')
+
 model = AsyncOpenAI(
     api_key=API_KEY,
     base_url=BASE_URL
@@ -19,7 +19,8 @@ set_default_openai_client(model, use_for_tracing=False)
 set_default_openai_api("chat_completions")
 set_tracing_disabled(disabled=True)
 
-async def main():
+
+async def run_agent():
     server = MCPServerSse(
         name="SSE Python Server",
         params={
@@ -35,15 +36,22 @@ async def main():
         )
         print('\n'.join(map(str, await agent.get_all_tools())))
 
-        messages = ["Write python code to add numbers 7 and 22"]
+        messages = []
         prev = None
         for message in messages:
             print(f"Running: {message}")
             run_config = RunConfig()
-            run_config.model_settings = ModelSettings(max_tokens=2000)
-            result = await Runner.run(starting_agent=agent, input=message, run_config=run_config, previous_response_id=prev)
-            prev=result.last_response_id
+            run_config.model_settings = ModelSettings(max_tokens=1000)
+            result = await Runner.run(starting_agent=agent, input=message, run_config=run_config,
+                                      previous_response_id=prev)
+            prev = result.last_response_id
             print(result.final_output)
+
+
+async def main():
+    server_task = asyncio.create_task(mcp_server.run_sse_async())
+    agent_task = asyncio.create_task(run_agent())
+    await asyncio.gather(server_task, agent_task)
 
 
 if __name__ == "__main__":

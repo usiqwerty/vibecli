@@ -21,10 +21,10 @@ def run_tests() -> str:
     return out.decode()
 
 
-@mcp_server.tool(name='write_file')
-def write_file(filename: str, content: str) -> None:
+@mcp_server.tool()
+def write_file(filename: str, content: str) -> int:
     with open(filename, 'w', encoding='utf-8') as f:
-        f.write(content)
+        return f.write(content)
 
 @mcp_server.resource("resource://{filename}")
 def read_file(filename: str) -> str:
