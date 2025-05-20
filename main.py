@@ -1,4 +1,6 @@
+import argparse
 import asyncio
+import os.path
 
 from agents import Agent, Runner, set_default_openai_client, set_default_openai_api, set_tracing_disabled, RunConfig
 from agents.mcp import MCPServerSse
@@ -7,9 +9,6 @@ from openai import AsyncOpenAI
 
 from config import API_KEY, BASE_URL, MODEL_NAME
 from vibe_mcp import mcp_server
-
-# run fastmcp run vibe_mcp.py:mcp_server --transport sse
-# before running this, run the mcp-server-openai.py file
 
 model = AsyncOpenAI(
     api_key=API_KEY,
@@ -20,7 +19,7 @@ set_default_openai_api("chat_completions")
 set_tracing_disabled(disabled=True)
 
 
-async def run_agent():
+async def run_agent(filename: str):
     server = MCPServerSse(
         name="SSE Python Server",
         params={
@@ -30,29 +29,40 @@ async def run_agent():
     async with server:
         agent = Agent(
             name="Assistant",
-            instructions="Use the tools to answer the questions.",
-            mcp_servers=[server],
+            instructions=f"Use the tools to answer the questions. Main working file is {filename}",
+            mcp_servers=[server], # server should be set up by this moment
             model_settings=ModelSettings(tool_choice="auto"),
         )
-        print('\n'.join(map(str, await agent.get_all_tools())))
 
-        messages = []
+
         prev = None
-        for message in messages:
+        while True:
+            message = input("input> ")
+            if message in ['q', 'quit', 'exit']:
+                break
+
             print(f"Running: {message}")
             run_config = RunConfig()
             run_config.model_settings = ModelSettings(max_tokens=1000)
             result = await Runner.run(starting_agent=agent, input=message, run_config=run_config,
                                       previous_response_id=prev)
             prev = result.last_response_id
-            print(result.final_output)
+            print('LLM:', result.final_output)
 
-
-async def main():
+async def main(filename: str):
     server_task = asyncio.create_task(mcp_server.run_sse_async())
-    agent_task = asyncio.create_task(run_agent())
-    await asyncio.gather(server_task, agent_task)
+    agent_task = asyncio.create_task(run_agent(filename))
+    # await asyncio.gather(server_task, agent_task)
+
+    await asyncio.wait_for(agent_task, None)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    parser = argparse.ArgumentParser()
+    parser.add_argument("input")
+    args = parser.parse_args()
+    if not os.path.exists(args.input):
+        with open(args.input, 'w') as f:
+            pass
+
+    asyncio.run(main(args.input))
