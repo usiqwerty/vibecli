@@ -24,6 +24,7 @@ def run_tests() -> str:
 
 @mcp_server.tool()
 def write_file(filename: str, content: str) -> int:
+    print(f"Writing file {filename}...")
     with open(filename, 'w', encoding='utf-8') as f:
         return f.write(content)
 
