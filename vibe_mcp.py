@@ -27,7 +27,7 @@ def write_file(filename: str, content: str) -> int:
     with open(filename, 'w', encoding='utf-8') as f:
         return f.write(content)
 
-@mcp_server.resource("resource://{filename}")
+@mcp_server.tool()
 def read_file(filename: str) -> str:
     print(f"Reading file {filename}...")
     with open(filename, encoding='utf-8') as f:
