@@ -1,4 +1,5 @@
 import asyncio
+import os
 import subprocess
 
 from fastmcp import FastMCP, Client
@@ -32,12 +33,20 @@ def read_file(filename: str) -> str:
     with open(filename, encoding='utf-8') as f:
         return f.read()
 
+@mcp_server.tool()
+def list_dir(dir_name: str | None = None) -> list[str]:
+    print(f"Reading directory {dir_name}...")
+    entries = os.listdir(dir_name)
+    for i, ent in enumerate(entries):
+        if os.path.isdir(ent):
+            entries[i] = ent + '/'
+    return entries
 
 if __name__ == "__main__":
     client = Client(mcp_server)
     async def call_tool():
         async with client:
-            result = await client.call_tool("write_file", {'filename': "add.py", "content": 'helo?'})
-            print(result)
+            result = await client.call_tool("list_dir")
+            print(result[0].text)
 
     asyncio.run(call_tool())
