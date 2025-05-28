@@ -10,7 +10,8 @@ from agents.model_settings import ModelSettings
 from fastmcp import FastMCP
 from openai import AsyncOpenAI
 
-from config import API_KEY, BASE_URL
+from config import API_KEY, BASE_URL, MODEL_NAME
+from ui import logo
 from vibe_mcp import mcp_server
 
 model = AsyncOpenAI(
@@ -24,6 +25,7 @@ set_tracing_disabled(disabled=True)
 
 class VibeService:
     filename: str
+    model_name: str
     fast_mcp_server: FastMCP
 
     def __init__(self, fast_mcp_server: FastMCP):
@@ -47,7 +49,7 @@ class VibeService:
             prev = None
             history = []
             while True:
-                message = input(f"{self.filename}> ")
+                message = input(f"{self.model_name}@{self.filename}> ")
 
                 if message in ['q', 'quit', 'exit']:
                     break
@@ -83,7 +85,10 @@ if __name__ == "__main__":
     parser.add_argument("input")
     args = parser.parse_args()
 
-
+    print(logo)
+    print("An ultimate vibecoding CLI")
+    print("Type q/quit/exit to exit")
     app = VibeService(mcp_server)
     app.filename = args.input
+    app.model_name = MODEL_NAME
     asyncio.run(app.main())
