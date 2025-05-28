@@ -1,21 +1,32 @@
 import asyncio
 import os
 import signal
+import traceback
 from asyncio import CancelledError
 
-from agents import Agent, ModelSettings, RunConfig, OpenAIChatCompletionsModel, Runner, RunResult
+from agents import Agent, ModelSettings, RunConfig, OpenAIChatCompletionsModel, Runner, RunResult, ModelProvider, Model
 from agents.mcp import MCPServerSse
 from fastmcp import FastMCP
-from openai import AsyncOpenAI
-
+from openai import AsyncOpenAI, RateLimitError
 from config import MODEL_NAME
+
+
+class OAICompatibleModelProvider(ModelProvider):
+    openai_client: AsyncOpenAI
+
+    def __init__(self, openai_client: AsyncOpenAI):
+        self.openai_client = openai_client
+
+    def get_model(self, model_name: str | None) -> Model:
+        return OpenAIChatCompletionsModel(model=model_name, openai_client=self.openai_client)
 
 
 class VibecodeApp:
     openai_client: AsyncOpenAI
     filename: str
-    model_name: str
     fast_mcp_server: FastMCP
+    run_config: RunConfig
+    history: list[dict]
 
     def __init__(self, fast_mcp_server: FastMCP, openai_client: AsyncOpenAI):
         self.fast_mcp_server = fast_mcp_server
@@ -26,40 +37,68 @@ class VibecodeApp:
             },
         )
         self.openai_client = openai_client
+        self.run_config = RunConfig(model=MODEL_NAME, model_provider=OAICompatibleModelProvider(self.openai_client))
+        self.history = []
 
     async def run_agent(self):
         async with self.server:
             agent = Agent(
                 name="Assistant",
-                instructions=f"Use provided the tools to complete given task. Current working file is {self.filename}. If needed, examine directory and read files to get necessary information.",
+                instructions=f"""Use provided the tools to complete given task. Current working file is {self.filename}. You are free to examine whole directory and do everything you consider related to solution""",
                 mcp_servers=[self.server],  # server should be set up by this moment
                 model_settings=ModelSettings(tool_choice="auto"),
             )
 
-            history = []
+            self.history = []
             while True:
-                message = input(f"{self.model_name}@{self.filename}> ")
+                message = input(f"{self.run_config.model}@{self.filename}> ")
 
                 if message in ['q', 'quit', 'exit']:
                     break
+                if message.startswith('/'):
+                    await self.process_command(message[1:], agent)
+                    continue
+
                 print(f"Running: {message}")
-                history.append({'type': 'message', 'role': 'user', 'content': message})
-                run_config = RunConfig(model=OpenAIChatCompletionsModel(
-                    model=MODEL_NAME,
-                    openai_client=self.openai_client
-                ))
+                self.history.append({'type': 'message', 'role': 'user', 'content': message})
+                await self.make_llm_request(agent)
 
-                run_config.model_settings = ModelSettings(max_tokens=4000)
-                result = await Runner.run(starting_agent=agent,
-                                          input=history,
-                                          run_config=run_config)
-                result: RunResult
+    async def process_command(self, command: str, agent):
+        if command == 'model':
+            print(self.run_config.model)
+            new_model_name = input('> ')
+            if not new_model_name:
+                return
+            self.run_config.model = new_model_name
+        elif command == 'hist':
+            for msg in self.history:
+                print(msg)
+        elif command == 'histpop':
+            if self.history:
+                self.history.pop()
+            print(f"{len(self.history)} messages")
+        elif command=='redo':
+            await self.make_llm_request(agent)
 
-                history = result.to_input_list()
-                print('LLM:', result.final_output)
+    async def make_llm_request(self, agent):
+        self.run_config.model_settings = ModelSettings(max_tokens=1000)
+        try:
+            result: RunResult = await Runner.run(starting_agent=agent,
+                                                 input=self.history,
+                                                 run_config=self.run_config)
+
+            history = result.to_input_list()
+
+            print('LLM:', result.final_output)
+        except RateLimitError as e:
+            print(e)
+        except Exception as e:
+            traceback.print_exception(e)
+            for msg in self.history:
+                print(msg)
 
     async def main(self):
-        server_task = asyncio.create_task(self.fast_mcp_server.run_http_async(transport='sse', log_level='warning'))
+        server_task = asyncio.create_task(self.fast_mcp_server.run_http_async(transport='sse', log_level='debug'))
         agent_task = asyncio.create_task(self.run_agent())
         try:
             await agent_task
