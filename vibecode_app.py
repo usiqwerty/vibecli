@@ -31,7 +31,7 @@ class VibecodeApp:
         async with self.server:
             agent = Agent(
                 name="Assistant",
-                instructions=f"Use the tools to answer the questions. Main working file is {self.filename}",
+                instructions=f"Use provided the tools to complete given task. Current working file is {self.filename}. If needed, examine directory and read files to get necessary information.",
                 mcp_servers=[self.server],  # server should be set up by this moment
                 model_settings=ModelSettings(tool_choice="auto"),
             )
@@ -49,7 +49,7 @@ class VibecodeApp:
                     openai_client=self.openai_client
                 ))
 
-                run_config.model_settings = ModelSettings(max_tokens=1000)
+                run_config.model_settings = ModelSettings(max_tokens=4000)
                 result = await Runner.run(starting_agent=agent,
                                           input=history,
                                           run_config=run_config)
