@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import logging
 
 from agents import set_default_openai_client, set_default_openai_api, set_tracing_disabled
 from openai import AsyncOpenAI
@@ -20,8 +21,10 @@ set_tracing_disabled(disabled=True)
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("input")
+    parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
-
+    if args.debug:
+        logging.getLogger().setLevel(logging.DEBUG)
     print(logo)
     print("An ultimate vibecoding CLI")
     print("Type q/quit/exit to exit")
