@@ -5,9 +5,13 @@ from fastmcp import FastMCP
 
 mcp_server = FastMCP(
     name="Vibe Server",
-    instructions="""Call write_file(filename: str, content: str) and read_file(filename: str) to operate with files.
-Run list_dir(dir_name: str | None = None) to get directory contents.
-Run run_tests() to run pytest""",
+    instructions="""This server provides folowwing tools for programming:
+| function | description |
+|-|-|
+| write_file(filename: str, content: str) -> int | write text to file |
+| read_file(filename: str) -> str | read text from file |
+| list_dir(dir_name: str | None)-> list[str] | get directory contents |
+| run_tests() | run pytest in subprocess | """,
     on_duplicate_tools="error",
     on_duplicate_resources="error",
     on_duplicate_prompts="error"
