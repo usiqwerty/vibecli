@@ -4,21 +4,22 @@ import signal
 import traceback
 from asyncio import CancelledError
 
-from agents import Agent, ModelSettings, RunConfig, OpenAIChatCompletionsModel, Runner, RunResult, ModelProvider, Model
+from agents import Agent, ModelSettings, RunConfig, OpenAIChatCompletionsModel, Runner, RunResult, ModelProvider, Model, OpenAIProvider
 from agents.mcp import MCPServerSse
 from fastmcp import FastMCP
 from openai import AsyncOpenAI, RateLimitError
 from config import MODEL_NAME
+from providers import TunedModel
 
 
-class OAICompatibleModelProvider(ModelProvider):
+class TunedModelProvider(ModelProvider):
     openai_client: AsyncOpenAI
 
     def __init__(self, openai_client: AsyncOpenAI):
         self.openai_client = openai_client
 
     def get_model(self, model_name: str | None) -> Model:
-        return OpenAIChatCompletionsModel(model=model_name, openai_client=self.openai_client)
+        return TunedModel(model=model_name, openai_client=self.openai_client)
 
 
 class VibecodeApp:
@@ -37,7 +38,8 @@ class VibecodeApp:
             },
         )
         self.openai_client = openai_client
-        self.run_config = RunConfig(model=MODEL_NAME, model_provider=OAICompatibleModelProvider(self.openai_client))
+        self.run_config = RunConfig(model=MODEL_NAME,
+                                    model_provider=TunedModelProvider(openai_client=self.openai_client))
         self.history = []
 
     async def run_agent(self):
@@ -87,7 +89,7 @@ class VibecodeApp:
                                                  input=self.history,
                                                  run_config=self.run_config)
 
-            history = result.to_input_list()
+            self.history = result.to_input_list()
 
             print('LLM:', result.final_output)
         except RateLimitError as e:
@@ -96,6 +98,7 @@ class VibecodeApp:
             traceback.print_exception(e)
             for msg in self.history:
                 print(msg)
+            print("There was a problem with request. Type /redo to repeat")
 
     async def main(self):
         server_task = asyncio.create_task(self.fast_mcp_server.run_http_async(transport='sse', log_level='debug'))

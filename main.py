@@ -23,8 +23,12 @@ if __name__ == "__main__":
     parser.add_argument("input")
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
+    # print(logging.getHandlerNames())
     if args.debug:
         logging.getLogger().setLevel(logging.DEBUG)
+        logging.getLogger('openai.agents').setLevel(logging.DEBUG)
+
+    print(logging.getLogger().getEffectiveLevel())
     print(logo)
     print("An ultimate vibecoding CLI")
     print("Type q/quit/exit to exit")
