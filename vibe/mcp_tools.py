@@ -8,13 +8,7 @@ from fastmcp.exceptions import ToolError
 WORKING_DIRECTORY = Path(os.path.curdir).resolve()
 mcp_server = FastMCP(
     name="Vibe Server",
-    instructions="""This server provides folowwing tools for programming:
-| function | description |
-|-|-|
-| write_file(filename: str, content: str) -> int | write text to file |
-| read_file(filename: str) -> str | read text from file |
-| list_dir(dir_name: str | None)-> list[str] | get directory contents |
-| run_tests() | run pytest in subprocess | """,
+    instructions="""This server provides tools for programming like reading and writing files, directory listing, etc.""",
     on_duplicate_tools="error",
     on_duplicate_resources="error",
     on_duplicate_prompts="error"
