@@ -37,7 +37,3 @@ def run():
     print("An ultimate vibecoding CLI")
     print("Type q/quit/exit to exit")
     asyncio.run(app.main())
-
-
-if __name__ == "__main__":
-    run()
