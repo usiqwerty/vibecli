@@ -2,9 +2,10 @@ import json
 import logging
 
 from agents import OpenAIChatCompletionsModel, TResponseInputItem, ModelSettings, Tool, AgentOutputSchemaBase, Handoff, \
-    ModelTracing, ModelResponse, generation_span, _debug, Usage
+    ModelTracing, ModelResponse, generation_span, _debug, Usage, ModelProvider, Model
 from agents.logger import logger
 from agents.models.openai_chatcompletions import Converter
+from openai import AsyncOpenAI
 
 
 class TunedModel(OpenAIChatCompletionsModel):
@@ -69,3 +70,13 @@ class TunedModel(OpenAIChatCompletionsModel):
                 usage=usage,
                 response_id=None,
             )
+
+
+class TunedModelProvider(ModelProvider):
+    openai_client: AsyncOpenAI
+
+    def __init__(self, openai_client: AsyncOpenAI):
+        self.openai_client = openai_client
+
+    def get_model(self, model_name: str | None) -> Model:
+        return TunedModel(model=model_name, openai_client=self.openai_client)

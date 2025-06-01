@@ -7,7 +7,7 @@ from openai import AsyncOpenAI
 
 from vibe.config import API_KEY, BASE_URL, MODEL_NAME
 from vibe.ui import logo
-from vibe.vibe_tools import mcp_server
+from vibe.mcp_tools import mcp_server
 from vibe.vibecode_app import VibecodeApp
 
 client = AsyncOpenAI(

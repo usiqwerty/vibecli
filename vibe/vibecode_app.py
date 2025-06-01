@@ -4,22 +4,12 @@ import signal
 import traceback
 from asyncio import CancelledError
 
-from agents import Agent, ModelSettings, RunConfig, OpenAIChatCompletionsModel, Runner, RunResult, ModelProvider, Model, OpenAIProvider
+from agents import Agent, ModelSettings, RunConfig, Runner, RunResult
 from agents.mcp import MCPServerSse
 from fastmcp import FastMCP
 from openai import AsyncOpenAI, RateLimitError
 from vibe.config import MODEL_NAME
-from vibe.providers import TunedModel
-
-
-class TunedModelProvider(ModelProvider):
-    openai_client: AsyncOpenAI
-
-    def __init__(self, openai_client: AsyncOpenAI):
-        self.openai_client = openai_client
-
-    def get_model(self, model_name: str | None) -> Model:
-        return TunedModel(model=model_name, openai_client=self.openai_client)
+from vibe.model_providers import TunedModelProvider
 
 
 class VibecodeApp:
@@ -43,23 +33,32 @@ class VibecodeApp:
                                     model_provider=TunedModelProvider(openai_client=self.openai_client))
         self.history = []
 
+    @property
+    def agent_instructions(self):
+        return (f"Use provided the tools to complete given task. "
+                f"Current working file is {self.filename}. "
+                f"You are free to examine whole directory and do everything you consider related to solution")
+
     async def run_agent(self):
         async with self.server:
             agent = Agent(
                 name="Assistant",
-                instructions=f"""Use provided the tools to complete given task. Current working file is {self.filename}. You are free to examine whole directory and do everything you consider related to solution""",
+                instructions=self.agent_instructions,
                 mcp_servers=[self.server],  # server should be set up by this moment
                 model_settings=ModelSettings(tool_choice="auto"),
             )
 
             self.history = []
             while True:
-                message = input(f"{self.run_config.model}@{self.filename}> ")
+                message = input(f"{self.run_config.model}@{self.filename}> ").strip()
 
                 if message in ['q', 'quit', 'exit']:
                     break
                 if message.startswith('/'):
                     await self.process_command(message[1:], agent)
+                    continue
+                elif message.startswith('@'):
+                    self.filename = message[1:]
                     continue
 
                 print(f"Running: {message}")
