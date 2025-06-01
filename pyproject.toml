@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools >= 77.0.3", "wheel", "fastmcp~=2.3.4", "openai-agents==0.0.15"]
+requires = ["setuptools >= 77.0.3", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -11,5 +11,9 @@ readme = "README.md"
 license = "GPL-3.0-only"
 license-files = ["LICEN[CS]E*"]
 
+dependencies = [
+    "fastmcp~=2.3.4",
+    "openai-agents==0.0.15"
+]
 [project.scripts]
 vibe = "vibe.main:run"
