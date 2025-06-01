@@ -36,7 +36,7 @@ class TunedModel(OpenAIChatCompletionsModel):
                 stream=False,
             )
             if response.choices is None:
-                logging.debug(response.model_extra)
+                logging.error(response.model_extra)
             else:
                 if _debug.DONT_LOG_MODEL_DATA:
                     logger.debug("Received model response")

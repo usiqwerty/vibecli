@@ -8,8 +8,8 @@ from agents import Agent, ModelSettings, RunConfig, OpenAIChatCompletionsModel, 
 from agents.mcp import MCPServerSse
 from fastmcp import FastMCP
 from openai import AsyncOpenAI, RateLimitError
-from config import MODEL_NAME
-from providers import TunedModel
+from vibe.config import MODEL_NAME
+from vibe.providers import TunedModel
 
 
 class TunedModelProvider(ModelProvider):
@@ -28,6 +28,7 @@ class VibecodeApp:
     fast_mcp_server: FastMCP
     run_config: RunConfig
     history: list[dict]
+    log_level = 'warning'
 
     def __init__(self, fast_mcp_server: FastMCP, openai_client: AsyncOpenAI):
         self.fast_mcp_server = fast_mcp_server
@@ -90,7 +91,10 @@ class VibecodeApp:
                                                  run_config=self.run_config)
 
             self.history = result.to_input_list()
-
+            for r in result.raw_responses:
+                in_t = r.usage.input_tokens
+                out_t = r.usage.output_tokens
+                print(f"Token usage: {in_t} in, {out_t} out")
             print('LLM:', result.final_output)
         except RateLimitError as e:
             print(e)
@@ -101,7 +105,7 @@ class VibecodeApp:
             print("There was a problem with request. Type /redo to repeat")
 
     async def main(self):
-        server_task = asyncio.create_task(self.fast_mcp_server.run_http_async(transport='sse', log_level='debug'))
+        server_task = asyncio.create_task(self.fast_mcp_server.run_http_async(transport='sse', log_level=self.log_level))
         agent_task = asyncio.create_task(self.run_agent())
         try:
             await agent_task

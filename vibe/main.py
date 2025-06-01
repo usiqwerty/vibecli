@@ -5,10 +5,10 @@ import logging
 from agents import set_default_openai_client, set_default_openai_api, set_tracing_disabled
 from openai import AsyncOpenAI
 
-from config import API_KEY, BASE_URL, MODEL_NAME
-from ui import logo
-from vibe_tools import mcp_server
-from vibecode_app import VibecodeApp
+from vibe.config import API_KEY, BASE_URL, MODEL_NAME
+from vibe.ui import logo
+from vibe.vibe_tools import mcp_server
+from vibe.vibecode_app import VibecodeApp
 
 client = AsyncOpenAI(
     api_key=API_KEY,
@@ -18,21 +18,26 @@ set_default_openai_client(client, use_for_tracing=False)
 set_default_openai_api("chat_completions")
 set_tracing_disabled(disabled=True)
 
-if __name__ == "__main__":
+def run():
     parser = argparse.ArgumentParser()
     parser.add_argument("input")
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
-    # print(logging.getHandlerNames())
-    if args.debug:
-        logging.getLogger().setLevel(logging.DEBUG)
-        logging.getLogger('openai.agents').setLevel(logging.DEBUG)
 
-    print(logging.getLogger().getEffectiveLevel())
-    print(logo)
-    print("An ultimate vibecoding CLI")
-    print("Type q/quit/exit to exit")
     app = VibecodeApp(mcp_server, client)
     app.filename = args.input
     app.model_name = MODEL_NAME
+
+    if args.debug:
+        logging.getLogger().setLevel(logging.DEBUG)
+        logging.getLogger('openai.agents').setLevel(logging.DEBUG)
+        app.log_level = 'debug'
+
+    print(logo)
+    print("An ultimate vibecoding CLI")
+    print("Type q/quit/exit to exit")
     asyncio.run(app.main())
+
+
+if __name__ == "__main__":
+    run()
