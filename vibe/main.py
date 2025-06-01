@@ -20,7 +20,7 @@ set_tracing_disabled(disabled=True)
 
 def run():
     parser = argparse.ArgumentParser()
-    parser.add_argument("input")
+    parser.add_argument("input", nargs="?")
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
 

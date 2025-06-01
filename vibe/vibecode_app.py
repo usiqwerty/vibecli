@@ -35,9 +35,17 @@ class VibecodeApp:
 
     @property
     def agent_instructions(self):
+        file_line = f" Current working file is {self.filename}. " if self.filename else ""
+
         return (f"Use provided the tools to complete given task. "
-                f"Current working file is {self.filename}. "
-                f"You are free to examine whole directory and do everything you consider related to solution")
+                f"You are free to examine whole directory and do everything you consider related to solution."
+                + file_line)
+    @property
+    def __user_prompt(self):
+        if self.filename:
+            return f"{self.run_config.model}@{self.filename}> "
+        else:
+            return f"{self.run_config.model}> "
 
     async def run_agent(self):
         async with self.server:
@@ -50,7 +58,7 @@ class VibecodeApp:
 
             self.history = []
             while True:
-                message = input(f"{self.run_config.model}@{self.filename}> ").strip()
+                message = input(self.__user_prompt).strip()
 
                 if message in ['q', 'quit', 'exit']:
                     break
@@ -58,7 +66,7 @@ class VibecodeApp:
                     await self.process_command(message[1:], agent)
                     continue
                 elif message.startswith('@'):
-                    self.filename = message[1:]
+                    self.filename = message[1:] or None
                     continue
 
                 print(f"Running: {message}")
