@@ -1,6 +1,6 @@
 # vibe
 An ultimate vibecoding CLI.
-
+![](docs/demo.gif)
 ## Installation
 Easy installation directly from github:
 ```shell
