@@ -14,7 +14,7 @@ Some commands change session-wide settings, while others can change [persistent 
 /model
 ```
 
-Switch model
+Switch a model
 
 Prints current model and takes new model name.
 If no input provided (user just pressed Enter without typing anything) then nothing changes.
@@ -26,7 +26,7 @@ If no input provided (user just pressed Enter without typing anything) then noth
 
 Display conversation history.
 
-Prints current loaded conversation: including prompts, responses and tool calls.
+Prints current loaded conversation including prompts, responses and tool calls.
 
 ## histpop
 ```

@@ -2,7 +2,7 @@
 
 Main config is stored in `~/.vibe/config.json` (or equivalent directory in Windows).
 
-It keeps settings that are applied when `vibe` starts up.
+It stores settings that are applied when `vibe` starts up.
 
 | Key        | Description                                                                                    |
 |------------|------------------------------------------------------------------------------------------------|

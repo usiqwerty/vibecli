@@ -28,7 +28,7 @@ You will be notified if agent performs some actions, like file reading or direct
 
 If model wants to write a file, you will be asked to give consent.
 
-## Change a file
+## Switching files
 When you need to switch to another file, you can type `@filename` to switch to `filename`.
 ```
 gpt-4o-mini@file.ext>@filename
