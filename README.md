@@ -18,3 +18,7 @@ On the first run it will ask for connection parameters like API key and Base URL
 - Hot model switching
 - Security (so it won't take over your computer)
 - Supports OpenAI-compatible SDK
+
+## Guides
+
+[Documentation](docs/index.md)
