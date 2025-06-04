@@ -5,6 +5,7 @@ import pathlib
 home_path = pathlib.Path.home()
 config_dir_path = os.path.join(home_path, ".vibe")
 main_config_path = os.path.join(config_dir_path, "config.json")
+history_file_path = os.path.join(config_dir_path, "conversations.json")
 
 try:
     with open(main_config_path, encoding='utf-8') as f:
@@ -21,6 +22,12 @@ except FileNotFoundError:
     }
     with open(main_config_path,'w', encoding='utf-8') as f:
         json.dump(config, f)
+try:
+    with open(history_file_path, encoding='utf-8') as f:
+        pass
+except FileNotFoundError:
+    with open(history_file_path,'w', encoding='utf-8') as f:
+        f.write('{}')
 
 API_KEY = config['api-key']
 BASE_URL = config['base-url']

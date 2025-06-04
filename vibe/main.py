@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import logging
+import os
 
 from agents import set_default_openai_client, set_default_openai_api, set_tracing_disabled
 from openai import AsyncOpenAI
@@ -40,4 +41,5 @@ def run():
     print(logo)
     print("An ultimate vibecoding CLI")
     print("Type q/quit/exit to exit")
+    app.load_history(os.getcwd())
     asyncio.run(app.main())

@@ -1,5 +1,7 @@
 import asyncio
+import json
 import os
+import pathlib
 import signal
 import traceback
 from asyncio import CancelledError
@@ -8,7 +10,7 @@ from agents import Agent, ModelSettings, RunConfig, Runner, RunResult
 from agents.mcp import MCPServerSse
 from fastmcp import FastMCP
 from openai import AsyncOpenAI, RateLimitError
-from vibe.config import MODEL_NAME
+from vibe.config import MODEL_NAME, history_file_path
 from vibe.model_providers import TunedModelProvider
 
 
@@ -47,6 +49,25 @@ class VibecodeApp:
         else:
             return f"{self.run_config.model}> "
 
+    def load_history(self, directory: str):
+        """Load history for specifed directory"""
+        with open(history_file_path, encoding='utf-8') as f:
+            all_hists = json.load(f)
+        # print(all_hists)
+        current_dir_history = all_hists.get(directory, [])
+        self.history = current_dir_history
+        if self.history:
+            print(f"History restored: {len(self.history)} messages")
+
+    def set_history(self, new_history: list[dict]):
+        self.history = new_history
+
+        with open(history_file_path, 'r', encoding='utf-8') as f:
+            all_hists = json.load(f)
+        all_hists[os.getcwd()] = self.history
+        with open(history_file_path, 'w', encoding='utf-8') as f:
+            json.dump(all_hists, f)
+
     async def run_agent(self):
         async with self.server:
             agent = Agent(
@@ -56,7 +77,6 @@ class VibecodeApp:
                 model_settings=ModelSettings(tool_choice="auto"),
             )
 
-            self.history = []
             while True:
                 message = input(self.__user_prompt).strip()
 
@@ -70,7 +90,7 @@ class VibecodeApp:
                     continue
 
                 print(f"Running: {message}")
-                self.history.append({'type': 'message', 'role': 'user', 'content': message})
+                self.set_history(self.history + [{'type': 'message', 'role': 'user', 'content': message}])
                 await self.make_llm_request(agent)
 
     async def process_command(self, command: str, agent):
@@ -97,7 +117,7 @@ class VibecodeApp:
                                                  input=self.history,
                                                  run_config=self.run_config)
 
-            self.history = result.to_input_list()
+            self.set_history(result.to_input_list())
             for r in result.raw_responses:
                 in_t = r.usage.input_tokens
                 out_t = r.usage.output_tokens
