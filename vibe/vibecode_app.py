@@ -93,6 +93,23 @@ class VibecodeApp:
                 self.set_history(self.history + [{'type': 'message', 'role': 'user', 'content': message}])
                 await self.make_llm_request(agent)
 
+    def show_history(self):
+        for entry in self.history:
+            if entry['type'] == 'message':
+                if isinstance(entry['content'], str):
+                    print(f"== {entry['role']} ==")
+                    print(' ' + entry['content'].replace('\n', '\n '))
+                else:
+                    for content_item in entry['content']:
+                        if content_item['type'] == 'output_text':
+                            print(f"== {entry['role']} ==")
+                            print(' '+ content_item['text'].replace('\n', '\n '))
+            elif entry['type'] == 'function_call':
+                print(f"===> {entry['name']}({entry['arguments']})")
+            elif entry['type'] == 'function_call_output':
+                print(f"===>  Function call output: {len(entry['output'])} chars")
+            else:
+                print(entry)
     async def process_command(self, command: str, agent):
         if command == 'model':
             print(self.run_config.model)
@@ -101,8 +118,7 @@ class VibecodeApp:
                 return
             self.run_config.model = new_model_name
         elif command == 'hist':
-            for msg in self.history:
-                print(msg)
+            self.show_history()
         elif command == 'histpop':
             if self.history:
                 self.history.pop()
@@ -127,8 +143,7 @@ class VibecodeApp:
             print(e)
         except Exception as e:
             traceback.print_exception(e)
-            for msg in self.history:
-                print(msg)
+            self.show_history()
             print("There was a problem with request. Type /redo to repeat")
 
     async def main(self):
