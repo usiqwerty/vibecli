@@ -29,9 +29,13 @@ def run():
     app.model_name = MODEL_NAME
 
     if args.debug:
-        logging.getLogger().setLevel(logging.DEBUG)
-        logging.getLogger('openai.agents').setLevel(logging.DEBUG)
+        logging_level = logging.DEBUG
         app.log_level = 'debug'
+    else:
+        logging_level = logging.WARNING
+    logging.getLogger().setLevel(logging_level)
+    logging.getLogger('FastMCP').setLevel(logging_level)
+    logging.getLogger('openai.agents').setLevel(logging_level)
 
     print(logo)
     print("An ultimate vibecoding CLI")
