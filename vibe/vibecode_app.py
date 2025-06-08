@@ -123,7 +123,10 @@ class VibecodeApp:
         elif command == 'histpop':
             if self.history:
                 self.history.pop()
+                self.set_history(self.history)
             print(f"{len(self.history)} messages")
+        elif command == 'histclear':
+            self.set_history([])
         elif command=='redo':
             await self.make_llm_request(agent)
 
