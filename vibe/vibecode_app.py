@@ -37,10 +37,11 @@ class VibecodeApp:
 
     @property
     def agent_instructions(self):
-        file_line = f" Current working file is {self.filename}. " if self.filename else ""
+        file_line = f"Current working file is {self.filename}. " if self.filename else ""
 
         return (f"Use provided the tools to complete given task. "
-                f"You are free to examine whole directory and do everything you consider related to solution."
+                "When you wrtie code you are expected to write it to file. "
+                f"You are free to examine whole directory and do everything you consider related to solution. "
                 + file_line)
     @property
     def __user_prompt(self):
